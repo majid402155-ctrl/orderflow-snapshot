@@ -1,28 +1,38 @@
-# Next (re-planned against the v2.4 system guide)
+# Next (re-planned against backend v2.4)
 
 ## Just finished
-**2.1 Phone + code sign-in** — built. One correction queued: the code arrives on
-**WhatsApp**, so the screen wording changes to say so (folded into 2.1b below).
+**2.1 Phone + code sign-in** — built. Correction queued: the code arrives on
+**WhatsApp**, so the wording changes (folded into 2.1b).
 
 ## Building next, in this order
+
 | # | Slice | Why now |
 |---|---|---|
-| 2.1b | WhatsApp wording + the verify-path fallback | tiny, finishes 2.1 correctly |
-| 2.3 | Dish sizes on the dish page and in the cart | the order body needs `size_id` |
-| 2.4 | Multi-item cart | now **confirmed** by the backend |
-| 2.2 | Branch picker (opening hours + delivery radius aware) | `branch_id` is required on the order |
-| 2.5 | Coupon box | preview discount before placing |
-| 2.6 | Real bill from the order response + **out-of-stock (409) screen** | never trust a client total |
+| 2.1b | WhatsApp wording, verify-path fallback, `429` countdown on the sign-in button | tiny, finishes 2.1 correctly |
+| 2.2 | Dish sizes on the dish page and in the cart (`sizes[]` → `size_id`) | the order body needs it |
+| 2.3 | Multi-item cart + real order body (`branch_id`, `order_type`, `items[]`) | confirmed contract |
+| 2.4 | Branch picker (opening hours + delivery radius aware) | `branch_id` is required |
+| 2.5 | Coupon box (preview discount before placing) | |
+| 2.6 | Real bill from the order response + **out-of-stock (409) modal** | never trust a client total |
 
 ## Then
-- **Phase 3 Tracking** — now socket-first (`ws/orders/{order_code}/`) with the Phase 1
-  refresh engine as automatic fallback; rider map; rating dialog.
-- **Phase 4 Kitchen board** — socket chime on new order (`ws/kitchen/`), one-tap advance.
-- **Phase 5 Admin core** — orders feed, rider assignment, priority/ETA/notes, menu manager.
-- **Phase 5b Cashier / POS (new)** — counter order screen, settle payment, receipt.
-- **Phase 6 Owner tools** — inventory with low-stock alerts and recipe deduction view,
-  staff manager with the one-time temp password, branch manager with hours + radius.
-- **Phase 7 SaaS layer** — sign-up wizard with trial, plans, invoices, proof upload.
-- **Phase 8 Design unification.**
-- **Phase 9 (new) Realtime everywhere** — fleet map (`ws/admin/fleet/`), and switching the
-  remaining screens from refresh to push.
+
+- **Phase 3 Tracking** — new public `/track/$code` page, socket-first
+  (`ws/orders/{order_code}/`) with the refresh engine as automatic fallback, 5-step
+  timeline, rider bike marker interpolated on the map, rating dialog.
+- **Phase 4 Kitchen board** (`/kitchen`) — two columns (`confirmed`, `kitchen`), elapsed
+  timers turning amber past 15 min, chime on `ws/kitchen/`, one-tap advance, rider
+  quick-assign.
+- **Phase 5 Admin core** — orders feed with status filter and search, priority/ETA/notes,
+  rider assignment, payment proof review, defensive analytics cards.
+- **Phase 5b Cashier / POS** (`/admin/pos` + `<ManualOrderModal />`) — takeaway /
+  delivery / dine-in toggle, customer name + phone, searchable dish picker with sizes,
+  staff-chosen initial status, create & print ticket.
+- **Phase 6 Owner tools** — inventory with low-stock alerts and restore-on-cancel
+  messaging, branch manager (hours + radius), staff manager with the one-time temp
+  password.
+- **Phase 7 SaaS layer** — `/onboard` wizard with trial, plans grid, subscription card,
+  invoice proof upload.
+- **Phase 8 Design unification** — one token set across all five surfaces.
+- **Phase 9 Realtime rollout** — fleet map (`ws/admin/fleet/`), remaining screens moved
+  from refresh to push, exponential-backoff reconnect everywhere.
