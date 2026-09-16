@@ -166,7 +166,7 @@ function LoginPage() {
     e.preventDefault();
     if (isSubmitting || volt.done) return;
     if (code.trim().length < 4) {
-      volt.complain("Enter the 6-digit code we texted you.");
+      volt.complain("Enter the 6-digit code we sent on WhatsApp.");
       return;
     }
     setIsSubmitting(true);
@@ -216,7 +216,7 @@ function LoginPage() {
               setMode(m);
               volt.say(
                 m === "phone"
-                  ? "Just your number — we'll text a code."
+                  ? "Just your number — we'll send a WhatsApp code."
                   : "Staff sign-in. Username and password.",
               );
             }}
@@ -225,7 +225,7 @@ function LoginPage() {
               mode === m ? "bg-white text-flame shadow-sm" : "text-charcoal/55 hover:text-charcoal",
             )}
           >
-            {m === "phone" ? "Phone code" : "Password"}
+            {m === "phone" ? "WhatsApp code" : "Password"}
           </button>
         ))}
       </div>
@@ -245,7 +245,7 @@ function LoginPage() {
               onFocus={() => {
                 volt.setTurned(false);
                 volt.setMoodSafe("watching");
-                volt.say("Your number — no password needed.");
+                volt.say("Your WhatsApp number — no password needed.");
                 volt.follow(phone);
               }}
               onChange={(e) => {
@@ -263,7 +263,7 @@ function LoginPage() {
                 <input
                   type="text"
                   value={code}
-                  placeholder="6-digit code"
+                  placeholder="6-digit WhatsApp code"
                   className="auth-field tracking-[0.4em]"
                   autoComplete="one-time-code"
                   inputMode="numeric"
@@ -295,7 +295,7 @@ function LoginPage() {
           )}
 
           <p className="text-[12px] font-semibold text-charcoal/55">
-            First time? No sign-up needed — your number becomes your account.
+            The code arrives on WhatsApp. First time? No sign-up needed — your number becomes your account.
           </p>
 
           <button
