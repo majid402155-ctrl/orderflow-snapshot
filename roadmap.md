@@ -15,33 +15,35 @@ WebSockets all confirmed).
 ## Phase 2 — Customer Flow Upgrade
 Multi-item `items: []` CONFIRMED by the v2.4 guide — no longer blocked.
 - [x] 2.1 Phone+code sign-in, silent account creation
-- [ ] 2.1b WhatsApp wording + verify-path fallback
-- [ ] 2.3 Dish size selection (size_id)
-- [ ] 2.4 Multi-item cart
-- [ ] 2.2 Branch picker (opening hours + delivery radius)
+- [ ] 2.1b WhatsApp wording + verify-path fallback + 429 countdown on the sign-in button
+- [ ] 2.2 Dish size selection (sizes[] -> size_id)
+- [ ] 2.3 Multi-item cart + real order body (order_type, branch_id, items[])
+- [ ] 2.4 Branch picker (opening hours + delivery radius)
 - [ ] 2.5 Coupon box
-- [ ] 2.6 Real bill from order response + out-of-stock (409) screen
+- [ ] 2.6 Real bill from order response (delivery_fee + cod_fee) + out-of-stock (409) modal
 
 ## Phase 3 — Order Tracking (socket-first, refresh engine as fallback)
-- [ ] 3.1 Status timeline on ws/orders/{order_code}/
-- [ ] 3.2 Rider live map from pushed GPS
+- [ ] 3.1 New public /track/$code page, 5-step timeline on ws/orders/{order_code}/
+- [ ] 3.2 Rider live map from pushed GPS (customer pin, branch pin, interpolated bike)
 - [ ] 3.3 Rating dialog on delivery
 
-## Phase 4 — Kitchen Screen
-- [ ] 4.1 3-column ticket board
-- [ ] 4.2 One-tap status advance
+## Phase 4 — Kitchen Screen (/kitchen)
+- [ ] 4.1 Ticket board: confirmed + kitchen columns, elapsed timers amber past 15 min
+- [ ] 4.2 One-tap status advance + rider quick-assign
 - [ ] 4.3 New-order chime over ws/kitchen/
 
 ## Phase 5 — Admin Core
-- [ ] 5.1 Orders feed + rider assignment
+- [ ] 5.1 Orders feed (status filter, search by code/phone) + rider assignment
 - [ ] 5.2 Priority/ETA/notes controls
-- [ ] 5.3 Real unassign call + proper refund flow (endpoint still to confirm)
+- [ ] 5.3 Payment proof review (reference + screenshot) + refund flow (endpoint to confirm)
 - [ ] 5.4 Menu manager: dishes, categories, photo upload, discounts
+- [ ] 5.5 Analytics cards parsed defensively
 
 ## Phase 5b — Cashier / POS (new, from v2.4 guide)
-- [ ] 5b.1 Counter order screen (source: "pos")
-- [ ] 5b.2 Payment settle + verify
-- [ ] 5b.3 Receipt print layout
+- [ ] 5b.1 /admin/pos + <ManualOrderModal />: takeaway / delivery / dine-in toggle
+- [ ] 5b.2 Customer name + phone (invisible account linking), staff-chosen initial status
+- [ ] 5b.3 Payment settle + verify
+- [ ] 5b.4 Receipt print layout
 
 ## Phase 6 — Owner Tools
 - [ ] 6.1 Inventory + low-stock warnings + recipe deduction view
