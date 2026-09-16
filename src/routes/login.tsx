@@ -300,13 +300,15 @@ function LoginPage() {
 
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || lockedFor > 0}
             aria-busy={isSubmitting}
             className={cn("auth-cta", isSubmitting && "btn-pending")}
           >
             {isSubmitting ? <span className="btn-spinner" aria-hidden /> : <span aria-hidden>📱</span>}
             {isSubmitting ? (
               <span className="btn-dots">{codeSent ? "Checking your code" : "Sending code"}</span>
+            ) : lockedFor > 0 ? (
+              `Too many tries — wait ${lockedFor}s`
             ) : codeSent ? (
               "Verify & sign in"
             ) : (
