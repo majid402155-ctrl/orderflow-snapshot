@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import type { Dish } from "@/lib/menu";
+import { dishSizes } from "@/lib/cart";
 import {
   PAYMENTS,
   ORDER_STAGES,
@@ -34,12 +35,6 @@ import { api, isBackendConfigured } from "@/lib/api/client";
 import { formatPkPhoneInput, normalizePkPhone, validateCity, validateName, validatePkPhone, validateStreet } from "@/lib/validation";
 
 export type OrderIntent = { dish: Dish; mode: "cart" | "order" } | null;
-
-const SIZES = [
-  { label: "Regular", extra: 0 },
-  { label: "Large", extra: 350 },
-  { label: "Family", extra: 700 },
-];
 
 type Step = "details" | "address" | "payment" | "placing" | "tracking";
 
