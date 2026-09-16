@@ -1,15 +1,13 @@
 # Next (re-planned against backend v2.4)
 
 ## Just finished
-**2.1 Phone + code sign-in** — built. Correction queued: the code arrives on
-**WhatsApp**, so the wording changes (folded into 2.1b).
+**2.2 Dish sizes** — dishes carry real `sizes[]` with prices and `size_id`; the dish page,
+order dialog and cart all read them, with the old three-size ladder as fallback.
 
 ## Building next, in this order
 
 | # | Slice | Why now |
 |---|---|---|
-| 2.1b | WhatsApp wording, verify-path fallback, `429` countdown on the sign-in button | tiny, finishes 2.1 correctly |
-| 2.2 | Dish sizes on the dish page and in the cart (`sizes[]` → `size_id`) | the order body needs it |
 | 2.3 | Multi-item cart + real order body (`branch_id`, `order_type`, `items[]`) | confirmed contract |
 | 2.4 | Branch picker (opening hours + delivery radius aware) | `branch_id` is required |
 | 2.5 | Coupon box (preview discount before placing) | |

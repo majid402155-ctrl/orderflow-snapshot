@@ -59,3 +59,13 @@ using, sign-in works. After too many attempts the server answers "too many reque
 button now disables itself and counts down 60 seconds instead of letting the user keep
 hammering a blocked door.
 Files: `src/routes/login.tsx`, `src/lib/auth.ts`, `src/lib/api/endpoints.ts`.
+
+### 2.2 Dish sizes from the menu itself ✅
+Every dish now carries its real size list (`sizes[]` → label + price + `size_id`). The dish
+page and the order dialog show those sizes with their own prices instead of a made-up
+"+350/+700" ladder, and the chosen `size_id` is stored on the cart line ready for the order
+body. Dishes without sizes (or when only sample data is available) fall back to the old
+three-size ladder so nothing breaks.
+Files: `src/lib/menu.ts` (`DishSize`, `Dish.sizes`, normaliser), `src/lib/cart.ts`
+(`dishSizes`, `unitPriceFor`, `CartLine.sizeId`, smarter `addToCart`),
+`src/routes/dish.$slug.tsx`, `src/components/kennedy/OrderDialog.tsx`.

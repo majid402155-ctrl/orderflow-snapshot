@@ -6,6 +6,9 @@ import skewers from "@/assets/skewers.png";
 import { api, isBackendConfigured } from "@/lib/api/client";
 import { MENU } from "@/lib/api/endpoints";
 
+/** A size option on a dish. `id` is the backend size_id used in the order body. */
+export type DishSize = { id?: number; size: string; price: string };
+
 export type Dish = {
   id?: number;
   slug: string;
@@ -30,6 +33,8 @@ export type Dish = {
   chef: string;
   categorySlug?: string;
   categoryName?: string;
+  /** Size options from the backend (`sizes[]`). Empty = single fixed price. */
+  sizes: DishSize[];
   /** Link to an AR / 3D recipe experience for this dish. */
   arUrl?: string;
 };
@@ -109,6 +114,7 @@ export const DISHES: Dish[] = [
     calories: 1120,
     spiceLevel: 4,
     chef: "Chef Kennedy",
+    sizes: [{ size: "Regular", price: "1450" }, { size: "Large", price: "1800" }, { size: "Family", price: "2150" }]
   },
   {
     slug: "seekh-malai-boti",
@@ -137,6 +143,7 @@ export const DISHES: Dish[] = [
     calories: 890,
     spiceLevel: 3,
     chef: "Ustad Nadeem",
+    sizes: [{ size: "Regular", price: "1150" }, { size: "Large", price: "1500" }, { size: "Family", price: "1850" }]
   },
   {
     slug: "chicken-karahi",
@@ -165,6 +172,7 @@ export const DISHES: Dish[] = [
     calories: 1340,
     spiceLevel: 5,
     chef: "Chef Kennedy",
+    sizes: [{ size: "Regular", price: "1650" }, { size: "Large", price: "2000" }, { size: "Family", price: "2350" }]
   },
   {
     slug: "kabuli-pulao",
@@ -193,6 +201,7 @@ export const DISHES: Dish[] = [
     calories: 1260,
     spiceLevel: 1,
     chef: "Ustad Nadeem",
+    sizes: [{ size: "Regular", price: "1350" }, { size: "Large", price: "1700" }, { size: "Family", price: "2050" }]
   },
   {
     slug: "flame-grilled-steak",
@@ -221,6 +230,7 @@ export const DISHES: Dish[] = [
     calories: 980,
     spiceLevel: 2,
     chef: "Chef Kennedy",
+    sizes: [{ size: "Regular", price: "2450" }, { size: "Large", price: "2800" }, { size: "Family", price: "3150" }]
   },
 ];
 
@@ -286,6 +296,11 @@ export function normaliseBackendDish(b: BackendDish): Dish {
     chef: b.chef || "Chef Kennedy",
     categorySlug: b.category_slug,
     categoryName: b.category_name,
+    sizes: Array.isArray(b.sizes)
+      ? b.sizes
+          .filter((s) => s && typeof s.size === "string")
+          .map((s) => ({ id: s.id, size: s.size, price: String(s.price ?? "") }))
+      : [],
     arUrl: arLinkFor(b),
   };
 }
