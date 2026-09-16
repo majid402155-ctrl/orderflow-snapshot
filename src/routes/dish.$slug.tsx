@@ -18,7 +18,7 @@ import {
 import { toast } from "sonner";
 
 import { DISHES, fetchDishBySlug, getDish } from "@/lib/menu";
-import { SIZES, addToCart, sizeExtra, useLikes, useWishlist } from "@/lib/cart";
+import { addToCart, dishSizes, useLikes, useWishlist } from "@/lib/cart";
 
 
 export const Route = createFileRoute("/dish/$slug")({
@@ -70,8 +70,10 @@ function DishPage() {
   const wishlist = useWishlist();
   const likes = useLikes();
 
-  const [size, setSize] = useState("Regular");
+  const sizes = dishSizes(dish);
+  const [size, setSize] = useState(sizes[0]?.label ?? "Regular");
   const [qty, setQty] = useState(1);
+  const chosenSize = sizes.find((s) => s.label === size) ?? sizes[0];
 
   // magnifying glass
   const imgWrap = useRef<HTMLDivElement>(null);
@@ -81,7 +83,7 @@ function DishPage() {
     show: false,
   });
 
-  const unit = Number(dish.price) + sizeExtra(size);
+  const unit = chosenSize?.price ?? Number(dish.price);
   const total = unit * qty;
 
   const onMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -95,8 +97,10 @@ function DishPage() {
   };
 
   const add = (then?: () => void) => {
-    addToCart(dish.slug, size, qty);
-    toast.success(`${dish.name} × ${qty} cart mein add`, { description: `${size} · Rs ${total}` });
+    addToCart(dish.slug, chosenSize?.label ?? size, qty, chosenSize?.sizeId);
+    toast.success(`${dish.name} × ${qty} cart mein add`, {
+      description: `${chosenSize?.label ?? size} · Rs ${total}`,
+    });
     then?.();
   };
 
@@ -208,7 +212,7 @@ function DishPage() {
               Size
             </p>
             <div className="mt-2 flex gap-2">
-              {SIZES.map((s) => (
+              {sizes.map((s) => (
                 <button
                   key={s.label}
                   type="button"
@@ -220,7 +224,7 @@ function DishPage() {
                   }`}
                 >
                   {s.label}
-                  {s.extra > 0 && <span className="block text-[10px]">+{s.extra}</span>}
+                  <span className="block text-[10px]">Rs {s.price}</span>
                 </button>
               ))}
             </div>
