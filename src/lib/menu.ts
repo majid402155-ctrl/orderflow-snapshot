@@ -6,6 +6,9 @@ import skewers from "@/assets/skewers.png";
 import { api, isBackendConfigured } from "@/lib/api/client";
 import { MENU } from "@/lib/api/endpoints";
 
+/** A size option on a dish. `id` is the backend size_id used in the order body. */
+export type DishSize = { id?: number; size: string; price: string };
+
 export type Dish = {
   id?: number;
   slug: string;
@@ -30,6 +33,8 @@ export type Dish = {
   chef: string;
   categorySlug?: string;
   categoryName?: string;
+  /** Size options from the backend (`sizes[]`). Empty = single fixed price. */
+  sizes: DishSize[];
   /** Link to an AR / 3D recipe experience for this dish. */
   arUrl?: string;
 };
@@ -286,6 +291,11 @@ export function normaliseBackendDish(b: BackendDish): Dish {
     chef: b.chef || "Chef Kennedy",
     categorySlug: b.category_slug,
     categoryName: b.category_name,
+    sizes: Array.isArray(b.sizes)
+      ? b.sizes
+          .filter((s) => s && typeof s.size === "string")
+          .map((s) => ({ id: s.id, size: s.size, price: String(s.price ?? "") }))
+      : [],
     arUrl: arLinkFor(b),
   };
 }
