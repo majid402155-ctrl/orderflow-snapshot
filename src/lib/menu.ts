@@ -113,7 +113,8 @@ export const DISHES: Dish[] = [
     weight: "780 g",
     calories: 1120,
     spiceLevel: 4,
-    chef: "Chef Kennedy",
+    chef: "Chef Kennedy",,
+    sizes: [{ size: "Regular", price: "1450" }, { size: "Large", price: "1800" }, { size: "Family", price: "2150" }]
   },
   {
     slug: "seekh-malai-boti",
@@ -141,7 +142,8 @@ export const DISHES: Dish[] = [
     weight: "650 g",
     calories: 890,
     spiceLevel: 3,
-    chef: "Ustad Nadeem",
+    chef: "Ustad Nadeem",,
+    sizes: [{ size: "Regular", price: "1150" }, { size: "Large", price: "1500" }, { size: "Family", price: "1850" }]
   },
   {
     slug: "chicken-karahi",
@@ -169,7 +171,8 @@ export const DISHES: Dish[] = [
     weight: "1.1 kg",
     calories: 1340,
     spiceLevel: 5,
-    chef: "Chef Kennedy",
+    chef: "Chef Kennedy",,
+    sizes: [{ size: "Regular", price: "1650" }, { size: "Large", price: "2000" }, { size: "Family", price: "2350" }]
   },
   {
     slug: "kabuli-pulao",
@@ -197,7 +200,8 @@ export const DISHES: Dish[] = [
     weight: "1.2 kg",
     calories: 1260,
     spiceLevel: 1,
-    chef: "Ustad Nadeem",
+    chef: "Ustad Nadeem",,
+    sizes: [{ size: "Regular", price: "1350" }, { size: "Large", price: "1700" }, { size: "Family", price: "2050" }]
   },
   {
     slug: "flame-grilled-steak",
@@ -225,7 +229,8 @@ export const DISHES: Dish[] = [
     weight: "420 g",
     calories: 980,
     spiceLevel: 2,
-    chef: "Chef Kennedy",
+    chef: "Chef Kennedy",,
+    sizes: [{ size: "Regular", price: "2450" }, { size: "Large", price: "2800" }, { size: "Family", price: "3150" }]
   },
 ];
 
