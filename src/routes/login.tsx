@@ -105,6 +105,7 @@ function LoginPage() {
       setTimeout(() => navigate({ to: target }), 900);
     } catch (err: unknown) {
       if (err instanceof ApiError && err.status === 429) {
+        setLockedFor(60);
         const friendlyMsg = "Too many login attempts! Please wait 1 minute before trying again.";
         volt.complain("Hold on! Too many attempts. Try again in 60 seconds.");
         toast.error(friendlyMsg);
