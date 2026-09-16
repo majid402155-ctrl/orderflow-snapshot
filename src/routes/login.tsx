@@ -400,7 +400,7 @@ function LoginPage() {
         <button
           ref={volt.btnRef}
           type="submit"
-          disabled={isSubmitting}
+          disabled={isSubmitting || lockedFor > 0}
           aria-busy={isSubmitting}
           className={cn("auth-cta", isSubmitting && "btn-pending")}
           onMouseEnter={() => volt.hype(true)}
