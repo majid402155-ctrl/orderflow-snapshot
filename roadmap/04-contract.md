@@ -1,66 +1,83 @@
-# Verified backend contract (the version we code against)
+# Backend contract v2.4 (the version we code against)
 
 Base: `VITE_API_BASE_URL` (no trailing slash) · tenant `VITE_DEFAULT_TENANT_SLUG`
-Headers on every call: `Content-Type: application/json`, `X-Tenant-Slug`,
-`Authorization: Bearer <access>` when signed in. On 401: one silent
-`POST /api/auth/refresh/`, then `/login`.
+Headers on every call: `Content-Type: application/json`, `Accept: application/json`,
+`X-Tenant-Slug`, `Authorization: Bearer <access>` when signed in.
+On 401: one silent refresh (`/auth/refresh/`, fallback `/auth/token/refresh/`), then `/login`.
+Access token 60 min · refresh 7 days · login throttled at 5/min (`429`).
+
+## Tenants and branches
+Tenant resolution: `X-Tenant-Slug` header → subdomain → the signed-in staff user's tenant.
+A tenant has many branches; inventory and kitchen are **per branch**.
 
 ## Roles (7)
 customer · kitchen · rider · cashier · manager · admin · owner
 `must_change_password: true` locks the user on `/change-password`.
 
+Route guards: `/kitchen` kitchen+admin+manager · `/rider` rider ·
+`/admin/pos` + `/admin/orders` admin/owner/manager/cashier ·
+`/admin/inventory` admin/owner/manager · `/admin/staff` admin/owner · `/admin/billing` owner.
+
+Who may move what: kitchen does `confirmed → kitchen → packed` and may assign a rider;
+the assigned rider does `packed → onway → delivered`; admin/owner may do either.
+
 ## Auth
-- `POST /api/auth/login/` `{username: phone, password}` →
-  `{access, refresh, must_change_password, user:{id, role, full_name, tenant:{id,name,slug}}}`
-- `POST /api/auth/phone-otp/` `{phone}` → `{message}`
-- `POST /api/auth/phone-verify/` `{phone, code}` → `{access, refresh, is_new_customer, user}`
-  (new customer is created silently — no password asked)
-- Onboarding: `/api/onboard/initiate/` → `/verify/` → `/complete/`
+- `POST /auth/login/` `{username, password}` → `{access, refresh, must_change_password, user:{id, role, full_name, tenant:{id,name,slug}}}`
+- `POST /auth/phone-otp/` `{phone}` → 6-digit code **over WhatsApp**; unknown number becomes a customer silently
+- `POST /auth/phone-verify/` (alt `/auth/verify-otp/`) `{phone, code|otp}` → `{access, refresh, is_new_customer, user}`
+- Current user: `/profile/` (alt `/auth/me/`)
+- Onboarding: `/onboard/initiate/` → `/verify/` → `/complete/`
 
 ## Menu
-Dish `{id, name, slug, base_price, image_url, is_available, is_featured, sizes:[{id,size,price}]}`
-`GET /api/menu/categories/ | /dishes/ | /dishes/{slug}/`
+Dish `{id, name, slug, base_price, effective_price, image_url, is_available, is_featured, sizes:[{id,size,price}]}`
+`GET /menu/categories/ | /menu/dishes/ | /menu/dishes/{slug}/ | /menu/book/`
 
 ## Checkout
-`POST /api/orders/` `{branch_id, payment, coupon_code, address{...}, items:[{dish_id,size_id,qty}]}`
-→ 201 `{id, order_code, status, subtotal, discount, delivery_fee, total, items[]}`
-Coupon preview: `POST /api/orders/apply-coupon/ {code, subtotal}`
+```json
+POST /orders/
+{ "order_type": "delivery|takeaway|dine_in", "branch_id": 1, "payment": "cod",
+  "coupon_code": "…",
+  "items": [{"dish_id": 12, "size_id": 4, "qty": 2}],
+  "address": {"street": "…", "area": "…", "city": "…", "lat": 32.1, "lng": 74.87} }
+```
+→ 201 `{id, order_code, status, subtotal, delivery_fee, cod_fee, discount, total, items[], address}`
+
+Staff/POS variant adds `customer_name`, `customer_phone`, `status` (`confirmed` or
+`kitchen`) and may use `source: "pos"`. Takeaway and dine-in need **no address**: the
+backend uses the branch coordinates with Rs 0 delivery and Rs 0 COD fee.
+
+Fees for display only: delivery Rs 120 under Rs 2000, free at or above; COD Rs 150 on
+delivery orders. The bill is whatever the response says.
+
+Coupon preview: `POST /orders/apply-coupon/ {code, subtotal}` (path unconfirmed).
 
 ## Status vocabulary
-pending → confirmed → kitchen → packed → onway → delivered (cancelled anytime)
+`pending → confirmed → kitchen → packed → onway → delivered`, `cancelled` before delivery.
+`confirmed` deducts ingredients by recipe; `cancelled` restores them.
+List filter: `GET /orders/?status=confirmed,kitchen`.
 
-## Polling
-customer order 3–5s · admin feed 10s · rider jobs 10–15s · rider GPS share 10–15s
+## Realtime (confirmed)
+| Socket | For |
+|---|---|
+| `ws/orders/{order_code}/` | customer tracking — status + rider coordinates |
+| `ws/kitchen/` | KDS board and chime |
+| `ws/admin/fleet/` | all active riders on one map |
+
+Payload `{type: "order_update"|"rider_location", order_code, status, rider:{name, phone, lat, lng}}`.
+Reconnect with exponential backoff (1s, 2s, 4s, max 10s); fall back to the refresh engine.
 
 ## Rider
-`POST /api/rider/duty-status/` (always POST) · `/rider/location-share/` ·
-`/rider/earnings/` · `/rider/profile/`
+`POST /rider/duty-status/` (always POST) · `POST /rider/location-share/ {lat, lng}` during
+`onway` · `/rider/profile/` · `/rider/earnings/` — each with the `/auth/…` twin as fallback.
 
 ## Admin / owner
-orders status + assign-rider + controls · `/api/admin/menu/*` (+ multipart image upload) ·
-`/api/inventory/` · `POST /api/admin/staff/` (returns one-time temp password) ·
-`/api/admin/branches/` · `/api/billing/*` · `/api/orders/analytics/` (defensive parse)
+`/orders/{id}/status/ | /controls/ | /assign-rider/ | /verify-payment/ | /payment-status/` ·
+`/admin/menu/*` (+ multipart image upload) · `/inventory/` (+ `/{id}/adjust/`) ·
+`POST /admin/staff/` (returns a one-time temp password) · `/admin/branches/` ·
+`/billing/plans/ | /billing/subscription/ | /billing/invoices/initiate/` ·
+`/orders/analytics/` (field names parsed defensively).
 
----
-
-# v2.4 system-guide deltas (16 Sep 2026)
-
-- **Realtime confirmed**: `ws/orders/{order_code}/` (customer), `ws/kitchen/` (KDS),
-  `ws/admin/fleet/` (control room). Payload: `{type:"order_update", order_code, status,
-  rider:{name, phone, lat, lng}}`. Sockets are addressed by **order_code**, not id.
-- **Multi-item checkout confirmed**, with `branch_id`, `payment`, `items[]` and an
-  address carrying `lat, lng, street, area, city`.
-- **OTP is delivered over WhatsApp** (Evolution API). Send `/api/auth/phone-otp/`;
-  verify path spelled `/phone-verify/` in one guide, `/verify-otp/` in the other.
-- **Stock**: confirming an order deducts ingredients by recipe; not enough stock returns
-  `409 insufficient_stock`; cancelling restores stock.
-- **Payments**: COD auto-verifies on delivery. JazzCash/EasyPaisa need a reference number
-  plus a screenshot, reviewed via `POST /api/orders/{id}/verify-payment/`. Card is webhook-verified.
-- **Cashier/POS**: counter orders created with `source: "pos"`; receipts print ESC/POS.
-- **Branches** carry opening hours and a delivery radius; inventory and kitchen are per branch.
-- **Role matrix** (from the guide): kitchen may assign a rider; rider alone moves
-  `packed -> onway -> delivered`; manager sees analytics and inventory but not staff;
-  only admin/owner manage staff; only owner manages the SaaS subscription.
-- **Orders list filter**: `GET /api/orders/?status=confirmed,kitchen`.
-- **Rider paths** appear as `/api/auth/rider/duty-status/` and `/api/auth/rider/earnings/`
-  here, contradicting the master guide — both spellings are tried.
+## Failure codes → UI
+`400` inline field errors · `401` silent refresh then login · `403` "your role is not
+authorized" toast · `404` friendly empty state · `409 insufficient_stock` sold-out modal ·
+`429` disabled button with a 60-second countdown.
