@@ -137,7 +137,7 @@ function LoginPage() {
 
   async function sendCode(e?: React.FormEvent) {
     e?.preventDefault();
-    if (isSubmitting) return;
+    if (isSubmitting || lockedFor > 0) return;
     const problem = phoneProblem(phone);
     if (problem) {
       volt.complain(problem);
@@ -148,10 +148,11 @@ function LoginPage() {
       await requestPhoneCode(phone);
       setCodeSent(true);
       setResendIn(45);
-      volt.say("Code sent. Check your messages.");
-      toast.success("We sent a 6-digit code to your phone.");
+      volt.say("Code sent on WhatsApp. Check your chats.");
+      toast.success("We sent a 6-digit code to your WhatsApp.");
     } catch (err) {
       const msg = phoneError(err);
+      if (err instanceof ApiError && err.status === 429) setLockedFor(60);
       volt.complain(msg);
       toast.error(msg);
       if (msg.startsWith("Sign in by code")) setMode("password");
