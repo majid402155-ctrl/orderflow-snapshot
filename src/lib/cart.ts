@@ -7,6 +7,8 @@ import { FAVOURITES } from "@/lib/api/endpoints";
 export type CartLine = {
   slug: string;
   size: string;
+  /** Backend size_id for the order body (items[].size_id). Undefined for legacy lines. */
+  sizeId?: number;
   qty: number;
   /** Whether this line is included in the next "push to order". */
   selected?: boolean;
@@ -25,6 +27,34 @@ export const SIZES = [
 ];
 
 export const sizeExtra = (size: string) => SIZES.find((s) => s.label === size)?.extra ?? 0;
+
+/** A selectable size with its absolute unit price. */
+export type SizeOption = { label: string; price: number; sizeId?: number };
+
+/**
+ * The sizes a dish can be ordered in. Backend `sizes[]` wins; when a dish has
+ * none (sample data or a fixed-price dish) the legacy Regular/Large/Family
+ * ladder is derived from the base price so older screens keep working.
+ */
+export function dishSizes(dish: Dish): SizeOption[] {
+  if (dish.sizes && dish.sizes.length) {
+    return dish.sizes
+      .filter((s) => s.size)
+      .map((s) => ({
+        label: s.size,
+        price: Math.round(Number(s.price) || Number(dish.price) || 0),
+        sizeId: s.id,
+      }));
+  }
+  const base = Number(dish.price) || 0;
+  return SIZES.map((s) => ({ label: s.label, price: base + s.extra }));
+}
+
+/** Absolute unit price for a dish in a given size label. */
+export function unitPriceFor(dish: Dish, sizeLabel: string): number {
+  const opt = dishSizes(dish).find((s) => s.label === sizeLabel);
+  return opt ? opt.price : Number(dish.price) || 0;
+}
 
 function read<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
@@ -46,14 +76,21 @@ export function loadCart(): CartLine[] {
   return read<CartLine[]>(CART_KEY, []).map((l) => ({ ...l, selected: l.selected !== false }));
 }
 
-export function addToCart(slug: string, size = "Regular", qty = 1) {
+export function addToCart(slug: string, size?: string, qty = 1, sizeId?: number) {
+  const dish = getDish(slug) || DISHES.find((d) => d.slug === slug);
+  const options = dish ? dishSizes(dish) : [];
+  const chosen =
+    options.find((o) => o.label === size) ?? options[0] ?? { label: size ?? "Regular" };
+  const label = chosen.label;
+  const resolvedSizeId = sizeId ?? chosen.sizeId;
   const cart = loadCart();
-  const found = cart.find((l) => l.slug === slug && l.size === size);
+  const found = cart.find((l) => l.slug === slug && l.size === label);
   if (found) {
     found.qty = Math.min(20, found.qty + qty);
     found.selected = true;
+    if (resolvedSizeId != null) found.sizeId = resolvedSizeId;
   } else {
-    cart.push({ slug, size, qty, selected: true });
+    cart.push({ slug, size: label, sizeId: resolvedSizeId, qty, selected: true });
   }
   write(CART_KEY, cart);
 }
@@ -111,7 +148,7 @@ export function hydrateCart(lines: CartLine[]): CartItem[] {
   return lines.flatMap((l) => {
     const dish = getDish(l.slug) || DISHES.find((d) => d.slug === l.slug);
     if (!dish) return [];
-    const unit = Number(dish.price) + sizeExtra(l.size);
+    const unit = unitPriceFor(dish, l.size);
     return [{ ...l, selected: l.selected !== false, dish, unit, lineTotal: unit * l.qty }];
   });
 }
