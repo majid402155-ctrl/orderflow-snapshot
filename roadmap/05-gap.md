@@ -8,8 +8,8 @@ Legend: **BUILT** · **PARTIAL** (exists, incomplete or on sample data) · **MIS
 | Route | State |
 |---|---|
 | `/` storefront | BUILT — but no sizes, no branch, no category tabs from `/menu/categories/` |
-| `/dish/$slug` | PARTIAL — single price, no `sizes[]` picker |
-| `/cart` | PARTIAL — single-dish body, no `size_id`, no `branch_id`, no coupon, no `cod_fee` |
+| `/dish/$slug` | BUILT — real `sizes[]` picker with per-size prices (2.2) |
+| `/cart` | PARTIAL — `size_id` stored on lines (2.2); still no `branch_id`, coupon, or multi-item order body |
 | `/login`, `/signup`, `/forgot-password`, `/reset-password` | BUILT — phone code over WhatsApp (2.1/2.1b), 429 countdown on the button |
 | `/change-password` | BUILT (forced when `must_change_password`) |
 | `/profile` | BUILT — orders, addresses, security |
