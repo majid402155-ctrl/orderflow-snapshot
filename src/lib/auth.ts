@@ -194,26 +194,31 @@ export function phoneProblem(raw: string): string | null {
   return null;
 }
 
-/** POST /auth/phone-otp/ — asks the server to text a login code. */
+/**
+ * POST /auth/phone-otp/ — asks the server to send a login code.
+ * v2.4: the code is delivered over WhatsApp (Evolution API), not SMS.
+ */
 export async function requestPhoneCode(phone: string): Promise<void> {
   assertBackend();
   await api.post<{ message?: string }>(AUTH.phoneOtp, { phone: normalizePhone(phone) });
 }
 
-/** POST /auth/phone-verify/ — trades the code for a session. */
+/** POST /auth/phone-verify/ — trades the WhatsApp code for a session. */
 export async function verifyPhoneCode(phone: string, code: string): Promise<PhoneSignInResult> {
   assertBackend();
 
   const cleanPhone = normalizePhone(phone);
-  const body = { phone: cleanPhone, code: code.trim() };
+  // SLICE 2.1b — the two guides disagree on both the path and the field name
+  // (`code` vs `otp`), so we send both keys and try both paths.
+  const clean = code.trim();
+  const body = { phone: cleanPhone, code: clean, otp: clean };
 
-  // The two backend guides spell this path differently. Try the documented one,
-  // fall back to the other only when the first simply isn't there.
   let res: PhoneVerifyResponse;
   try {
     res = await api.post<PhoneVerifyResponse>(AUTH.phoneVerify, body);
   } catch (err) {
-    if (!(err instanceof ApiError) || err.status !== 404) throw err;
+    const missing = err instanceof ApiError && (err.status === 404 || err.status === 405);
+    if (!missing) throw err;
     res = await api.post<PhoneVerifyResponse>(AUTH.phoneVerifyAlt, body);
   }
 
