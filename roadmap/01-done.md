@@ -50,3 +50,12 @@ for staff. If the server has not switched the feature on yet, the screen says so
 plain words instead of failing.
 Files: `src/lib/api/endpoints.ts` (phone-otp / phone-verify), `src/lib/auth.ts`
 (`requestPhoneCode`, `verifyPhoneCode`), `src/routes/login.tsx` (two sign-in modes).
+
+### 2.1b WhatsApp wording, verify fallback, throttle countdown ✅
+The code is sent over WhatsApp, so every line on the sign-in screen now says so
+("WhatsApp code" tab, WhatsApp placeholder and helper text). The verify step sends both
+field spellings (`code` and `otp`) and tries both paths, so whichever the server ends up
+using, sign-in works. After too many attempts the server answers "too many requests": the
+button now disables itself and counts down 60 seconds instead of letting the user keep
+hammering a blocked door.
+Files: `src/routes/login.tsx`, `src/lib/auth.ts`, `src/lib/api/endpoints.ts`.
