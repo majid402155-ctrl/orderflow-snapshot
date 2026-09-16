@@ -52,12 +52,21 @@ function LoginPage() {
   const [code, setCode] = useState("");
   const [codeSent, setCodeSent] = useState(false);
   const [resendIn, setResendIn] = useState(0);
+  // SLICE 2.1b — sign-in is throttled to 5 attempts a minute. On a 429 we lock the
+  // button and count down instead of letting the user hammer a blocked endpoint.
+  const [lockedFor, setLockedFor] = useState(0);
 
   useEffect(() => {
     if (resendIn <= 0) return;
     const t = setTimeout(() => setResendIn((s) => s - 1), 1000);
     return () => clearTimeout(t);
   }, [resendIn]);
+
+  useEffect(() => {
+    if (lockedFor <= 0) return;
+    const t = setTimeout(() => setLockedFor((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [lockedFor]);
 
   // Railway free tier sleeps: the first request can take 10-30s. Show it.
   useEffect(() => {
