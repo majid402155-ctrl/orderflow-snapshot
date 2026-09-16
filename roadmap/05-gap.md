@@ -10,7 +10,7 @@ Legend: **BUILT** · **PARTIAL** (exists, incomplete or on sample data) · **MIS
 | `/` storefront | BUILT — but no sizes, no branch, no category tabs from `/menu/categories/` |
 | `/dish/$slug` | PARTIAL — single price, no `sizes[]` picker |
 | `/cart` | PARTIAL — single-dish body, no `size_id`, no `branch_id`, no coupon, no `cod_fee` |
-| `/login`, `/signup`, `/forgot-password`, `/reset-password` | BUILT — phone code added (2.1), wording still says SMS |
+| `/login`, `/signup`, `/forgot-password`, `/reset-password` | BUILT — phone code over WhatsApp (2.1/2.1b), 429 countdown on the button |
 | `/change-password` | BUILT (forced when `must_change_password`) |
 | `/profile` | BUILT — orders, addresses, security |
 | `/admin`, `/admin/orders`, `/admin/orders/$id`, `/admin/riders` | BUILT on the old contract |
@@ -34,7 +34,6 @@ Legend: **BUILT** · **PARTIAL** (exists, incomplete or on sample data) · **MIS
 | Order body | single dish, `{dish_slug, size, qty}` | `{branch_id, order_type, items:[{dish_id,size_id,qty}], address?}` |
 | Tracking address | order `id` | order **`code`** (`MG-XXXXXX`) |
 | Token refresh | `/api/auth/refresh/` | guide also names `/api/auth/token/refresh/` — try both |
-| Sign-in code wording | "SMS" | **WhatsApp** (Evolution API) |
 | Fees | `cod_fee` treated as a payment-method fee in the cart | server-calculated; takeaway/dine-in = Rs 0 delivery **and** Rs 0 COD fee |
 | Realtime | polling only, by decision | sockets confirmed; polling becomes the fallback |
 | Role of the profile call | `/profile/` | v2.4 guide names `/api/auth/me/` — keep the fallback pair |
@@ -44,7 +43,6 @@ Legend: **BUILT** · **PARTIAL** (exists, incomplete or on sample data) · **MIS
 - Counter POS: order type toggle (takeaway / delivery / dine-in), customer name + phone
   with invisible account linking, staff-chosen initial status, receipt print.
 - Out of stock: `409 insufficient_stock` needs its own modal, not a generic error.
-- Login throttling: `429` needs a disabled button with a 60-second countdown.
 - Inventory: stock table, low-stock red badges, manual adjust, "cancelling restores stock".
 - Branches: opening hours and delivery radius, respected by the customer branch picker.
 - Staff: create staff, show the one-time temp password exactly once.
