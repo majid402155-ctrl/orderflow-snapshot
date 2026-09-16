@@ -416,6 +416,8 @@ function LoginPage() {
           {isSubmitting ? <span className="btn-spinner" aria-hidden /> : <span aria-hidden>🍕</span>}
           {isSubmitting ? (
             <span className="btn-dots">{isWaking ? "Waking the kitchen" : "Checking your pass"}</span>
+          ) : lockedFor > 0 ? (
+            `Too many tries — wait ${lockedFor}s`
           ) : volt.done ? (
             "Order up ✓"
           ) : (
