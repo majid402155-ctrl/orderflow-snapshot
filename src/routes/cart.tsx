@@ -20,7 +20,14 @@ import {
   type Address,
   type PaymentMethod,
 } from "@/lib/orders";
-import { createOrder, getLastOrderCode, saveProfile } from "@/lib/account";
+import {
+  createOrder,
+  getLastOrderBill,
+  getLastOrderCode,
+  saveProfile,
+  type OrderType,
+} from "@/lib/account";
+import { resolveBranchId } from "@/lib/branches";
 import {
   formatPkPhoneInput,
   normalizePkPhone,
@@ -68,6 +75,7 @@ function CartPage() {
     notes: "",
   });
   const [touched, setTouched] = useState<Partial<Record<FieldKey, boolean>>>({});
+  const [orderType, setOrderType] = useState<OrderType>("delivery");
   const [payment, setPayment] = useState<PaymentMethod>("jazzcash");
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [locating, setLocating] = useState(false);
@@ -102,8 +110,11 @@ function CartPage() {
   );
   const usingNew = selectedAddr === "new" || !savedAddress;
 
+  /** Takeaway and dine-in need no address at all (v2.4 contract). */
+  const needsAddress = orderType === "delivery";
+
   const errors = useMemo(() => {
-    if (!usingNew) return {} as Partial<Record<FieldKey, string>>;
+    if (!needsAddress || !usingNew) return {} as Partial<Record<FieldKey, string>>;
     const e: Partial<Record<FieldKey, string>> = {};
     const checks = [
       ["name", validateName(form.name)],
@@ -113,13 +124,14 @@ function CartPage() {
     ] as const;
     for (const [key, check] of checks) if (!check.ok) e[key] = check.message;
     return e;
-  }, [form, usingNew]);
+  }, [form, usingNew, needsAddress]);
 
   const activeCoords = coords ??
     (savedAddress?.lat && savedAddress?.lng ? { lat: savedAddress.lat, lng: savedAddress.lng } : null);
 
-  const fee = PAYMENTS.find((p) => p.id === payment)?.fee ?? 0;
-  const delivery = subtotal >= 2000 || subtotal === 0 ? 0 : 120;
+  // Display only — the bill that counts comes back with the order.
+  const fee = needsAddress ? (PAYMENTS.find((p) => p.id === payment)?.fee ?? 0) : 0;
+  const delivery = !needsAddress || subtotal >= 2000 || subtotal === 0 ? 0 : 120;
   const total = subtotal + delivery + fee;
 
   const firstFieldError = (["name", "phone", "street", "city"] as const)
@@ -134,7 +146,7 @@ function CartPage() {
         ? "Tick at least one item above"
         : firstFieldError
           ? firstFieldError
-          : !activeCoords
+          : needsAddress && !activeCoords
             ? "Share your live location so the rider can find you"
             : null;
 
@@ -192,13 +204,17 @@ function CartPage() {
         : { ...savedAddress!, ...(activeCoords ?? {}) };
 
       const first = selected[0]!;
+      const branchId = await resolveBranchId().catch(() => null);
 
       await createOrder({
         userId: user?.id,
+        orderType,
+        branchId,
         items: selected.map((i) => ({
           dish_slug: i.slug,
           dish_id: i.dish?.id,
           size: i.size,
+          size_id: i.sizeId,
           qty: i.qty,
         })),
         dishName:
@@ -210,13 +226,14 @@ function CartPage() {
         qty: selected.reduce((n, i) => n + i.qty, 0),
         total,
         payment,
-        address,
+        ...(needsAddress ? { address } : {}),
       });
 
       // Remember this address for the next order
-      if (usingNew) await saveAddress({ id: crypto.randomUUID(), ...address }).catch(() => undefined);
+      if (needsAddress && usingNew)
+        await saveAddress({ id: crypto.randomUUID(), ...address }).catch(() => undefined);
 
-      if (user?.id) {
+      if (user?.id && needsAddress) {
         await saveProfile({
           id: user.id,
           full_name: address.name,
@@ -226,8 +243,13 @@ function CartPage() {
 
       clearSelected();
       const code = getLastOrderCode();
+      const bill = getLastOrderBill();
       toast.success(code ? `Order ${code} confirmed` : "Order confirmed", {
-        description: "Live rider tracking has started on your profile.",
+        description: bill
+          ? `Total Rs ${bill.total}${orderType === "delivery" ? " · live tracking has started" : " · we'll call when it's ready"}`
+          : orderType === "delivery"
+            ? "Live rider tracking has started on your profile."
+            : "We'll call you when it's ready to collect.",
         duration: 6000,
       });
       void navigate({ to: "/profile" });
@@ -353,10 +375,47 @@ function CartPage() {
               </div>
 
               <h2 className="mt-8 font-display text-lg font-extrabold uppercase text-charcoal">
-                Delivery details
+                How do you want it?
               </h2>
+              <div className="mt-3 grid grid-cols-3 gap-2">
+                {(
+                  [
+                    ["delivery", "Delivery", "To your door"],
+                    ["takeaway", "Takeaway", "Collect yourself"],
+                    ["dine_in", "Dine in", "Eat at the branch"],
+                  ] as const
+                ).map(([key, label, note]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    aria-pressed={orderType === key}
+                    onClick={() => setOrderType(key)}
+                    className={`rounded-2xl border-2 p-3 text-left ${
+                      orderType === key ? "border-flame bg-flame/5" : "border-charcoal/12"
+                    }`}
+                  >
+                    <span className="block font-display text-xs font-extrabold uppercase text-charcoal">
+                      {label}
+                    </span>
+                    <span className="block font-body text-[11px] text-charcoal/60">{note}</span>
+                  </button>
+                ))}
+              </div>
 
-              {addresses.length > 0 && (
+              {!needsAddress && (
+                <p className="mt-3 rounded-2xl bg-flame/5 px-4 py-3 font-body text-xs text-charcoal/70">
+                  No address needed — pay at the counter, with no delivery or cash-handling
+                  charge.
+                </p>
+              )}
+
+              {needsAddress && (
+                <h2 className="mt-8 font-display text-lg font-extrabold uppercase text-charcoal">
+                  Delivery details
+                </h2>
+              )}
+
+              {needsAddress && addresses.length > 0 && (
                 <div className="mt-3 space-y-2">
                   <p className="font-body text-[11px] uppercase tracking-widest text-charcoal/50">
                     Deliver to a saved address
@@ -398,7 +457,7 @@ function CartPage() {
                 </div>
               )}
 
-              {usingNew && (
+              {needsAddress && usingNew && (
                 <div className="mt-3 grid gap-2 sm:grid-cols-2">
                   {(
                     [
@@ -445,6 +504,7 @@ function CartPage() {
                 </div>
               )}
 
+              {needsAddress && (
               <button
                 type="button"
                 onClick={shareLocation}
@@ -465,6 +525,7 @@ function CartPage() {
                     ? `Location shared · ${activeCoords.lat.toFixed(4)}, ${activeCoords.lng.toFixed(4)}`
                     : "Share my live location (required)"}
               </button>
+              )}
             </div>
 
             {/* summary */}

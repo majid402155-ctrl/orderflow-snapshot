@@ -195,6 +195,30 @@ export async function fetchOrders(_userId?: string): Promise<DbOrder[]> {
 let _lastOrderCode: string | null = null;
 export const getLastOrderCode = () => _lastOrderCode;
 
+/**
+ * SLICE 2.3 — the bill the *server* calculated for the last order. The cart
+ * only ever shows an estimate; this is the real one.
+ */
+export type OrderBill = {
+  subtotal: number;
+  delivery_fee: number;
+  cod_fee: number;
+  discount: number;
+  total: number;
+};
+let _lastOrderBill: OrderBill | null = null;
+export const getLastOrderBill = () => _lastOrderBill;
+
+export type OrderType = "delivery" | "takeaway" | "dine_in";
+
+export type OrderLineInput = {
+  dish_slug?: string;
+  dish_id?: number;
+  size?: string;
+  size_id?: number;
+  qty: number;
+};
+
 export async function createOrder(input: {
   userId?: string;
   orderCode?: string;
@@ -204,32 +228,45 @@ export async function createOrder(input: {
   qty?: number;
   total?: number;
   payment: PaymentMethod;
-  address: Address;
+  /** Delivery orders need one; takeaway and dine-in don't. */
+  address?: Address;
   rider?: { name: string; phone: string; bike: string };
-  items?: { dish_slug?: string; dish_id?: number; size: string; qty: number }[];
+  items?: OrderLineInput[];
   dishSlug?: string;
+  orderType?: OrderType;
+  branchId?: number | null;
+  couponCode?: string;
 }): Promise<string> {
-  if (isBackendConfigured() && tokens.access()) {
-    const itemsPayload =
-      input.items && input.items.length
-        ? input.items.map((i) => ({
-            dish_slug: i.dish_slug,
-            dish_id: i.dish_id,
-            size: i.size || "Regular",
-            qty: i.qty || 1,
-          }))
-        : [
-            {
-              dish_slug: input.dishSlug,
-              size: input.size || "Regular",
-              qty: input.qty || 1,
-            },
-          ];
+  const orderType: OrderType = input.orderType || "delivery";
 
-    const orderPayload = {
+  if (isBackendConfigured() && tokens.access()) {
+    const lines: OrderLineInput[] =
+      input.items && input.items.length
+        ? input.items
+        : [{ dish_slug: input.dishSlug, size: input.size, qty: input.qty || 1 }];
+
+    const itemsPayload = lines.map((i) => ({
+      // `dish_id` + `size_id` is the v2.4 shape; slug/label stay as a fallback
+      // for the older build that is still deployed.
+      ...(i.dish_id != null ? { dish_id: i.dish_id } : {}),
+      ...(i.dish_slug ? { dish_slug: i.dish_slug } : {}),
+      ...(i.size_id != null ? { size_id: i.size_id } : {}),
+      size: i.size || "Regular",
+      qty: i.qty || 1,
+    }));
+
+    const orderPayload: Record<string, unknown> = {
+      order_type: orderType,
       items: itemsPayload,
       payment: input.payment,
-      address: {
+    };
+    if (input.branchId != null) orderPayload["branch_id"] = input.branchId;
+    if (input.couponCode) orderPayload["coupon_code"] = input.couponCode;
+
+    // Takeaway and dine-in carry no address — the backend uses the branch
+    // coordinates with Rs 0 delivery and Rs 0 COD.
+    if (orderType === "delivery" && input.address) {
+      orderPayload["address"] = {
         label: input.address.label || "Home",
         name: input.address.name,
         phone: input.address.phone,
@@ -239,11 +276,18 @@ export async function createOrder(input: {
         notes: input.address.notes || "",
         lat: input.address.lat || 32.1023,
         lng: input.address.lng || 74.8721,
-      },
-    };
+      };
+    }
 
     const res = await api.post<BackendOrder>(ORDERS.create, orderPayload);
     _lastOrderCode = res.order_code ? String(res.order_code) : String(res.id);
+    _lastOrderBill = {
+      subtotal: Number(res.subtotal) || 0,
+      delivery_fee: Number(res.delivery_fee) || 0,
+      cod_fee: Number(res.cod_fee) || 0,
+      discount: Number(res.discount) || 0,
+      total: Number(res.total) || 0,
+    };
     await fetchOrders();
     return String(res.id);
   }
@@ -259,7 +303,9 @@ export async function createOrder(input: {
     qty: input.qty || 1,
     total: input.total || 1500,
     payment: input.payment,
-    address: input.address,
+    address:
+      input.address ??
+      ({ label: "Counter", name: "", phone: "", street: "", area: "", city: "" } as Address),
     rider: input.rider || { name: "Bilal Ahmed", phone: "0300-4471902", bike: "Honda CD-70" },
     status: "confirmed",
     eta_minutes: 35,
@@ -267,6 +313,13 @@ export async function createOrder(input: {
   };
   write({ ...store, orders: [order, ...store.orders] });
   _lastOrderCode = order.order_code;
+  _lastOrderBill = {
+    subtotal: order.total,
+    delivery_fee: 0,
+    cod_fee: 0,
+    discount: 0,
+    total: order.total,
+  };
   return order.id;
 }
 
