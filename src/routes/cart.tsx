@@ -375,10 +375,47 @@ function CartPage() {
               </div>
 
               <h2 className="mt-8 font-display text-lg font-extrabold uppercase text-charcoal">
-                Delivery details
+                How do you want it?
               </h2>
+              <div className="mt-3 grid grid-cols-3 gap-2">
+                {(
+                  [
+                    ["delivery", "Delivery", "To your door"],
+                    ["takeaway", "Takeaway", "Collect yourself"],
+                    ["dine_in", "Dine in", "Eat at the branch"],
+                  ] as const
+                ).map(([key, label, note]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    aria-pressed={orderType === key}
+                    onClick={() => setOrderType(key)}
+                    className={`rounded-2xl border-2 p-3 text-left ${
+                      orderType === key ? "border-flame bg-flame/5" : "border-charcoal/12"
+                    }`}
+                  >
+                    <span className="block font-display text-xs font-extrabold uppercase text-charcoal">
+                      {label}
+                    </span>
+                    <span className="block font-body text-[11px] text-charcoal/60">{note}</span>
+                  </button>
+                ))}
+              </div>
 
-              {addresses.length > 0 && (
+              {!needsAddress && (
+                <p className="mt-3 rounded-2xl bg-flame/5 px-4 py-3 font-body text-xs text-charcoal/70">
+                  No address needed — pay at the counter, with no delivery or cash-handling
+                  charge.
+                </p>
+              )}
+
+              {needsAddress && (
+                <h2 className="mt-8 font-display text-lg font-extrabold uppercase text-charcoal">
+                  Delivery details
+                </h2>
+              )}
+
+              {needsAddress && addresses.length > 0 && (
                 <div className="mt-3 space-y-2">
                   <p className="font-body text-[11px] uppercase tracking-widest text-charcoal/50">
                     Deliver to a saved address
