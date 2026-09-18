@@ -75,6 +75,7 @@ function CartPage() {
     notes: "",
   });
   const [touched, setTouched] = useState<Partial<Record<FieldKey, boolean>>>({});
+  const [orderType, setOrderType] = useState<OrderType>("delivery");
   const [payment, setPayment] = useState<PaymentMethod>("jazzcash");
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [locating, setLocating] = useState(false);
@@ -109,8 +110,11 @@ function CartPage() {
   );
   const usingNew = selectedAddr === "new" || !savedAddress;
 
+  /** Takeaway and dine-in need no address at all (v2.4 contract). */
+  const needsAddress = orderType === "delivery";
+
   const errors = useMemo(() => {
-    if (!usingNew) return {} as Partial<Record<FieldKey, string>>;
+    if (!needsAddress || !usingNew) return {} as Partial<Record<FieldKey, string>>;
     const e: Partial<Record<FieldKey, string>> = {};
     const checks = [
       ["name", validateName(form.name)],
