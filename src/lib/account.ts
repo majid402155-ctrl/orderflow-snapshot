@@ -303,7 +303,9 @@ export async function createOrder(input: {
     qty: input.qty || 1,
     total: input.total || 1500,
     payment: input.payment,
-    address: input.address,
+    address:
+      input.address ??
+      ({ label: "Counter", name: "", phone: "", street: "", area: "", city: "" } as Address),
     rider: input.rider || { name: "Bilal Ahmed", phone: "0300-4471902", bike: "Honda CD-70" },
     status: "confirmed",
     eta_minutes: 35,
