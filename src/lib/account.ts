@@ -313,6 +313,13 @@ export async function createOrder(input: {
   };
   write({ ...store, orders: [order, ...store.orders] });
   _lastOrderCode = order.order_code;
+  _lastOrderBill = {
+    subtotal: order.total,
+    delivery_fee: 0,
+    cod_fee: 0,
+    discount: 0,
+    total: order.total,
+  };
   return order.id;
 }
 
