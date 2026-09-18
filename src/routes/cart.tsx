@@ -525,6 +525,7 @@ function CartPage() {
                     ? `Location shared · ${activeCoords.lat.toFixed(4)}, ${activeCoords.lng.toFixed(4)}`
                     : "Share my live location (required)"}
               </button>
+              )}
             </div>
 
             {/* summary */}
