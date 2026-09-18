@@ -124,13 +124,14 @@ function CartPage() {
     ] as const;
     for (const [key, check] of checks) if (!check.ok) e[key] = check.message;
     return e;
-  }, [form, usingNew]);
+  }, [form, usingNew, needsAddress]);
 
   const activeCoords = coords ??
     (savedAddress?.lat && savedAddress?.lng ? { lat: savedAddress.lat, lng: savedAddress.lng } : null);
 
-  const fee = PAYMENTS.find((p) => p.id === payment)?.fee ?? 0;
-  const delivery = subtotal >= 2000 || subtotal === 0 ? 0 : 120;
+  // Display only — the bill that counts comes back with the order.
+  const fee = needsAddress ? (PAYMENTS.find((p) => p.id === payment)?.fee ?? 0) : 0;
+  const delivery = !needsAddress || subtotal >= 2000 || subtotal === 0 ? 0 : 120;
   const total = subtotal + delivery + fee;
 
   const firstFieldError = (["name", "phone", "street", "city"] as const)
@@ -145,7 +146,7 @@ function CartPage() {
         ? "Tick at least one item above"
         : firstFieldError
           ? firstFieldError
-          : !activeCoords
+          : needsAddress && !activeCoords
             ? "Share your live location so the rider can find you"
             : null;
 
