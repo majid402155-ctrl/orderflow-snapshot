@@ -65,6 +65,14 @@ export const MENU = {
   dish: (slug: string) => `/menu/dishes/${slug}/`,
 } as const;
 
+/** SLICE 2.3/2.4 — branches. A tenant has many; inventory + kitchen are per branch. */
+export const BRANCHES = {
+  /** GET -> Branch[] (public read for the storefront picker) */
+  list: "/branches/",
+  /** Admin twin used by the owner console */
+  admin: "/admin/branches/",
+} as const;
+
 export const FAVOURITES = {
   /** GET -> {id, dish_slug, created_at}[] */
   list: "/favourites/",
