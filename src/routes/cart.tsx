@@ -204,13 +204,17 @@ function CartPage() {
         : { ...savedAddress!, ...(activeCoords ?? {}) };
 
       const first = selected[0]!;
+      const branchId = await resolveBranchId().catch(() => null);
 
       await createOrder({
         userId: user?.id,
+        orderType,
+        branchId,
         items: selected.map((i) => ({
           dish_slug: i.slug,
           dish_id: i.dish?.id,
           size: i.size,
+          size_id: i.sizeId,
           qty: i.qty,
         })),
         dishName:
@@ -222,13 +226,14 @@ function CartPage() {
         qty: selected.reduce((n, i) => n + i.qty, 0),
         total,
         payment,
-        address,
+        ...(needsAddress ? { address } : {}),
       });
 
       // Remember this address for the next order
-      if (usingNew) await saveAddress({ id: crypto.randomUUID(), ...address }).catch(() => undefined);
+      if (needsAddress && usingNew)
+        await saveAddress({ id: crypto.randomUUID(), ...address }).catch(() => undefined);
 
-      if (user?.id) {
+      if (user?.id && needsAddress) {
         await saveProfile({
           id: user.id,
           full_name: address.name,
@@ -238,8 +243,13 @@ function CartPage() {
 
       clearSelected();
       const code = getLastOrderCode();
+      const bill = getLastOrderBill();
       toast.success(code ? `Order ${code} confirmed` : "Order confirmed", {
-        description: "Live rider tracking has started on your profile.",
+        description: bill
+          ? `Total Rs ${bill.total}${orderType === "delivery" ? " · live tracking has started" : " · we'll call when it's ready"}`
+          : orderType === "delivery"
+            ? "Live rider tracking has started on your profile."
+            : "We'll call you when it's ready to collect.",
         duration: 6000,
       });
       void navigate({ to: "/profile" });
