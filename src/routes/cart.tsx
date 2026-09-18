@@ -457,7 +457,7 @@ function CartPage() {
                 </div>
               )}
 
-              {usingNew && (
+              {needsAddress && usingNew && (
                 <div className="mt-3 grid gap-2 sm:grid-cols-2">
                   {(
                     [
@@ -504,6 +504,7 @@ function CartPage() {
                 </div>
               )}
 
+              {needsAddress && (
               <button
                 type="button"
                 onClick={shareLocation}
