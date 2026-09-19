@@ -239,7 +239,7 @@ function CartPage() {
         : { ...savedAddress!, ...(activeCoords ?? {}) };
 
       const first = selected[0]!;
-      const branchId = await resolveBranchId().catch(() => null);
+      const chosenBranchId = branchId ?? (await resolveBranchId().catch(() => null));
 
       await createOrder({
         userId: user?.id,
