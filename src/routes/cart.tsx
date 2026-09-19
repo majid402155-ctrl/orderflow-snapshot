@@ -183,7 +183,11 @@ function CartPage() {
           ? firstFieldError
           : needsAddress && !activeCoords
             ? "Share your live location so the rider can find you"
-            : null;
+            : branches.length > 0 && !activeBranch
+              ? "Pick a branch to order from"
+              : activeBranch && !isOpenNow(activeBranch)
+                ? `${activeBranch.name} is closed right now`
+                : null;
 
   const shareLocation = () => {
     if (!navigator.geolocation) {
