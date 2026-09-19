@@ -244,7 +244,7 @@ function CartPage() {
       await createOrder({
         userId: user?.id,
         orderType,
-        branchId,
+        branchId: chosenBranchId,
         items: selected.map((i) => ({
           dish_slug: i.slug,
           dish_id: i.dish?.id,
