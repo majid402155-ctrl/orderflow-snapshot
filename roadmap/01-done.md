@@ -69,3 +69,19 @@ three-size ladder so nothing breaks.
 Files: `src/lib/menu.ts` (`DishSize`, `Dish.sizes`, normaliser), `src/lib/cart.ts`
 (`dishSizes`, `unitPriceFor`, `CartLine.sizeId`, smarter `addToCart`),
 `src/routes/dish.$slug.tsx`, `src/components/kennedy/OrderDialog.tsx`.
+
+### 2.3 Multi-item cart + real order body ✅
+One order now carries every ticked line (`items[]` with `dish_id` + `size_id`), plus
+`order_type` (delivery / takeaway / dine-in), `branch_id` and an optional `coupon_code`.
+Takeaway and dine-in ask for no address and show Rs 0 delivery + Rs 0 cash-handling. The
+confirmation quotes the bill the server returned instead of the cart's estimate.
+Files: `src/lib/account.ts` (`OrderBill`, `getLastOrderBill`, `OrderType`, `OrderLineInput`,
+rewritten `createOrder`), `src/lib/branches.ts` (new), `src/lib/api/endpoints.ts`
+(`BRANCHES`), `src/routes/cart.tsx`.
+
+### 2.4 Branch picker on the cart ✅
+The cart lists the tenant's branches with address, opening hours, live Open/Closed badge
+and (for delivery) the delivery radius. The choice is remembered for next time and sent as
+`branch_id`; ordering from a closed branch is blocked with a plain message. When the
+backend serves no branches the whole block stays hidden and the old auto-resolve applies.
+Files: `src/lib/branches.ts` (`branchHours`, `isOpenNow`), `src/routes/cart.tsx`.
