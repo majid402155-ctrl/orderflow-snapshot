@@ -101,6 +101,12 @@ export const ORDERS = {
   riderLocation: (id: number | string) => `/orders/${id}/rider-location/`,
   /** POST /orders/{id}/rate/ {rating: number} */
   rate: (id: number | string) => `/orders/${id}/rate/`,
+  /**
+   * SLICE 2.5 — UNCONFIRMED. Absent from the v2.4 guide; both spellings are
+   * tried and a 404 simply means the code rides along with the order body.
+   */
+  applyCoupon: "/orders/apply-coupon/",
+  applyCouponAlt: "/coupons/validate/",
 } as const;
 
 export const ADMIN = {

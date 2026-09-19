@@ -36,6 +36,7 @@ import {
   resolveBranchId,
   type Branch,
 } from "@/lib/branches";
+import { normalizeCoupon, previewCoupon, type CouponState } from "@/lib/coupons";
 import {
   formatPkPhoneInput,
   normalizePkPhone,
@@ -114,6 +115,28 @@ function CartPage() {
   const chooseBranch = (id: number) => {
     setBranchId(id);
     rememberBranchId(id);
+  };
+
+  // Discount code (SLICE 2.5) — preview when the backend offers it, otherwise
+  // the code simply rides along with the order.
+  const [couponInput, setCouponInput] = useState("");
+  const [coupon, setCoupon] = useState<CouponState>({ status: "none" });
+
+  const applyCoupon = async () => {
+    const code = normalizeCoupon(couponInput);
+    if (!code) return;
+    setCoupon({ status: "checking", code });
+    const next = await previewCoupon(code, subtotal);
+    setCoupon(next);
+    if (next.status === "invalid") toast.error(next.message);
+    else if (next.status === "applied")
+      toast.success(`Code ${next.code} applied · Rs ${next.discount} off`);
+    else toast.success(`Code ${code} added — the discount shows on your bill`);
+  };
+
+  const clearCoupon = () => {
+    setCoupon({ status: "none" });
+    setCouponInput("");
   };
 
   // Saved addresses (repeat orders should not retype anything)
