@@ -1,16 +1,14 @@
 # Next (re-planned against backend v2.4)
 
 ## Just finished
-**2.3 Multi-item cart + real order body** — one order carries every ticked line
-(`items[]` with `dish_id` + `size_id`), plus `order_type` (delivery / takeaway / dine-in),
-`branch_id` and an optional `coupon_code`. Takeaway and dine-in send no address and show
-Rs 0 delivery + Rs 0 COD. The confirmation now quotes the bill the server returned.
+**2.4 Branch picker on the cart** — branches are listed with hours, an Open/Closed badge and
+the delivery radius; the pick is remembered and sent as `branch_id`, and a closed branch
+blocks the order. (2.3 before it put the real multi-item order body in place.)
 
 ## Building next, in this order
 
 | # | Slice | Why now |
 |---|-------|---------|
-| 2.4 | Branch picker on the cart (opening hours + delivery radius) | branch is auto-resolved today, not chosen |
 | 2.5 | Coupon box (preview discount before placing) | body already accepts `coupon_code` |
 | 2.6 | Real bill shown in the summary + **out-of-stock (409) modal** | never trust a client total |
 

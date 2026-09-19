@@ -27,7 +27,15 @@ import {
   saveProfile,
   type OrderType,
 } from "@/lib/account";
-import { resolveBranchId } from "@/lib/branches";
+import {
+  branchHours,
+  fetchBranches,
+  isOpenNow,
+  rememberBranchId,
+  rememberedBranchId,
+  resolveBranchId,
+  type Branch,
+} from "@/lib/branches";
 import {
   formatPkPhoneInput,
   normalizePkPhone,
@@ -80,6 +88,33 @@ function CartPage() {
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [locating, setLocating] = useState(false);
   const [placing, setPlacing] = useState(false);
+
+  // Branches (SLICE 2.4) — hidden entirely when the backend serves none.
+  const [branches, setBranches] = useState<Branch[]>([]);
+  const [branchId, setBranchId] = useState<number | null>(() => rememberedBranchId());
+
+  useEffect(() => {
+    void fetchBranches().then((list) => {
+      if (!list.length) return;
+      setBranches(list);
+      setBranchId((cur) => {
+        const keep = cur && list.some((b) => b.id === cur) ? cur : null;
+        const next = keep ?? (list.find((b) => b.is_active !== false) ?? list[0])?.id ?? null;
+        if (next) rememberBranchId(next);
+        return next;
+      });
+    });
+  }, []);
+
+  const activeBranch = useMemo(
+    () => branches.find((b) => b.id === branchId) ?? null,
+    [branches, branchId],
+  );
+
+  const chooseBranch = (id: number) => {
+    setBranchId(id);
+    rememberBranchId(id);
+  };
 
   // Saved addresses (repeat orders should not retype anything)
   const [addresses, setAddresses] = useState<Address[]>([]);
@@ -148,7 +183,11 @@ function CartPage() {
           ? firstFieldError
           : needsAddress && !activeCoords
             ? "Share your live location so the rider can find you"
-            : null;
+            : branches.length > 0 && !activeBranch
+              ? "Pick a branch to order from"
+              : activeBranch && !isOpenNow(activeBranch)
+                ? `${activeBranch.name} is closed right now`
+                : null;
 
   const shareLocation = () => {
     if (!navigator.geolocation) {
@@ -204,12 +243,12 @@ function CartPage() {
         : { ...savedAddress!, ...(activeCoords ?? {}) };
 
       const first = selected[0]!;
-      const branchId = await resolveBranchId().catch(() => null);
+      const chosenBranchId = branchId ?? (await resolveBranchId().catch(() => null));
 
       await createOrder({
         userId: user?.id,
         orderType,
-        branchId,
+        branchId: chosenBranchId,
         items: selected.map((i) => ({
           dish_slug: i.slug,
           dish_id: i.dish?.id,
@@ -401,6 +440,55 @@ function CartPage() {
                   </button>
                 ))}
               </div>
+
+              {branches.length > 0 && (
+                <>
+                  <h2 className="mt-8 font-display text-lg font-extrabold uppercase text-charcoal">
+                    Which branch?
+                  </h2>
+                  <div className="mt-3 space-y-2">
+                    {branches.map((b) => {
+                      const open = isOpenNow(b);
+                      const hours = branchHours(b);
+                      return (
+                        <button
+                          key={b.id}
+                          type="button"
+                          aria-pressed={branchId === b.id}
+                          onClick={() => chooseBranch(b.id)}
+                          className={`flex w-full items-start justify-between gap-3 rounded-2xl border-2 p-3 text-left ${
+                            branchId === b.id ? "border-flame bg-flame/5" : "border-charcoal/12"
+                          }`}
+                        >
+                          <span className="min-w-0">
+                            <span className="block font-display text-sm font-extrabold uppercase text-charcoal">
+                              {b.name}
+                            </span>
+                            {b.address && (
+                              <span className="block truncate font-body text-[11px] text-charcoal/60">
+                                {b.address}
+                              </span>
+                            )}
+                            <span className="block font-body text-[11px] text-charcoal/50">
+                              {hours ? `Open ${hours}` : "Open hours not listed"}
+                              {needsAddress && b.delivery_radius_km
+                                ? ` · delivers up to ${b.delivery_radius_km} km`
+                                : ""}
+                            </span>
+                          </span>
+                          <span
+                            className={`shrink-0 rounded-full px-2 py-1 font-body text-[10px] font-bold uppercase ${
+                              open ? "bg-flame/10 text-flame" : "bg-charcoal/10 text-charcoal/60"
+                            }`}
+                          >
+                            {open ? "Open" : "Closed"}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
 
               {!needsAddress && (
                 <p className="mt-3 rounded-2xl bg-flame/5 px-4 py-3 font-body text-xs text-charcoal/70">
