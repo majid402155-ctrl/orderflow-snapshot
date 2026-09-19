@@ -131,7 +131,7 @@ function CartPage() {
     if (next.status === "invalid") toast.error(next.message);
     else if (next.status === "applied")
       toast.success(`Code ${next.code} applied · Rs ${next.discount} off`);
-    else toast.success(`Code ${next.code} added — the discount shows on your bill`);
+    else toast.success(`Code ${code} added — the discount shows on your bill`);
   };
 
   const clearCoupon = () => {
