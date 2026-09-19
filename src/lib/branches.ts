@@ -53,6 +53,32 @@ export async function fetchBranches(): Promise<Branch[]> {
   }
 }
 
+const toMinutes = (t?: string): number | null => {
+  if (!t) return null;
+  const [h, m] = t.split(":");
+  const hh = Number(h);
+  const mm = Number(m ?? 0);
+  return Number.isFinite(hh) ? hh * 60 + (Number.isFinite(mm) ? mm : 0) : null;
+};
+
+/** "11:00 – 23:30" when the branch publishes hours, else null. */
+export function branchHours(b: Branch): string | null {
+  if (!b.opens_at || !b.closes_at) return null;
+  return `${b.opens_at.slice(0, 5)} – ${b.closes_at.slice(0, 5)}`;
+}
+
+/**
+ * Open right now? Unknown hours count as open — we never hide a branch the
+ * backend did not describe. Handles past-midnight closing times.
+ */
+export function isOpenNow(b: Branch, now = new Date()): boolean {
+  const open = toMinutes(b.opens_at);
+  const close = toMinutes(b.closes_at);
+  if (open == null || close == null) return true;
+  const mins = now.getHours() * 60 + now.getMinutes();
+  return close > open ? mins >= open && mins < close : mins >= open || mins < close;
+}
+
 /** The branch id to send with the next order, or null when we can't tell. */
 export async function resolveBranchId(): Promise<number | null> {
   const remembered = rememberedBranchId();
