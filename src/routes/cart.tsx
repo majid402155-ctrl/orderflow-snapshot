@@ -89,6 +89,33 @@ function CartPage() {
   const [locating, setLocating] = useState(false);
   const [placing, setPlacing] = useState(false);
 
+  // Branches (SLICE 2.4) — hidden entirely when the backend serves none.
+  const [branches, setBranches] = useState<Branch[]>([]);
+  const [branchId, setBranchId] = useState<number | null>(() => rememberedBranchId());
+
+  useEffect(() => {
+    void fetchBranches().then((list) => {
+      if (!list.length) return;
+      setBranches(list);
+      setBranchId((cur) => {
+        const keep = cur && list.some((b) => b.id === cur) ? cur : null;
+        const next = keep ?? (list.find((b) => b.is_active !== false) ?? list[0])?.id ?? null;
+        if (next) rememberBranchId(next);
+        return next;
+      });
+    });
+  }, []);
+
+  const activeBranch = useMemo(
+    () => branches.find((b) => b.id === branchId) ?? null,
+    [branches, branchId],
+  );
+
+  const chooseBranch = (id: number) => {
+    setBranchId(id);
+    rememberBranchId(id);
+  };
+
   // Saved addresses (repeat orders should not retype anything)
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddr, setSelectedAddr] = useState<string>("new");
