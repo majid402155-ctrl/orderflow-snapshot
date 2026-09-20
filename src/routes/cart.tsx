@@ -190,7 +190,8 @@ function CartPage() {
   // Display only — the bill that counts comes back with the order.
   const fee = needsAddress ? (PAYMENTS.find((p) => p.id === payment)?.fee ?? 0) : 0;
   const delivery = !needsAddress || subtotal >= 2000 || subtotal === 0 ? 0 : 120;
-  const total = subtotal + delivery + fee;
+  const discount = coupon.status === "applied" ? Math.min(coupon.discount, subtotal) : 0;
+  const total = Math.max(0, subtotal + delivery + fee - discount);
 
   const firstFieldError = (["name", "phone", "street", "city"] as const)
     .map((k) => errors[k])
