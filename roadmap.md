@@ -61,3 +61,6 @@ Multi-item `items: []` CONFIRMED by the v2.4 guide — no longer blocked.
 ## Phase 9 — Realtime Everywhere (new, sockets confirmed)
 - [ ] 9.1 Fleet map on ws/admin/fleet/
 - [ ] 9.2 Move remaining screens from refresh to push
+
+## Handover
+- [x] `main_content.md` — full guide for the next person (system, architecture, done, next, design brief)
