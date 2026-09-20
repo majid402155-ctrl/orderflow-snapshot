@@ -17,9 +17,9 @@ Multi-item `items: []` CONFIRMED by the v2.4 guide — no longer blocked.
 - [x] 2.1 Phone+code sign-in, silent account creation
 - [x] 2.1b WhatsApp wording + verify-path fallback + 429 countdown on the sign-in button
 - [x] 2.2 Dish size selection (sizes[] -> size_id)
-- [ ] 2.3 Multi-item cart + real order body (order_type, branch_id, items[])
-- [ ] 2.4 Branch picker (opening hours + delivery radius)
-- [ ] 2.5 Coupon box
+- [x] 2.3 Multi-item cart + real order body (order_type, branch_id, items[])
+- [x] 2.4 Branch picker (opening hours + delivery radius)
+- [x] 2.5 Coupon box
 - [ ] 2.6 Real bill from order response (delivery_fee + cod_fee) + out-of-stock (409) modal
 
 ## Phase 3 — Order Tracking (socket-first, refresh engine as fallback)
