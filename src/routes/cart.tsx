@@ -273,6 +273,9 @@ function CartPage() {
         userId: user?.id,
         orderType,
         branchId: chosenBranchId,
+        ...(coupon.status === "applied" || coupon.status === "pending"
+          ? { couponCode: coupon.code }
+          : {}),
         items: selected.map((i) => ({
           dish_slug: i.slug,
           dish_id: i.dish?.id,
