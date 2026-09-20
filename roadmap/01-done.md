@@ -85,3 +85,12 @@ and (for delivery) the delivery radius. The choice is remembered for next time a
 `branch_id`; ordering from a closed branch is blocked with a plain message. When the
 backend serves no branches the whole block stays hidden and the old auto-resolve applies.
 Files: `src/lib/branches.ts` (`branchHours`, `isOpenNow`), `src/routes/cart.tsx`.
+
+### 2.5 Discount code box on the cart ✅
+The summary panel has a code field. Apply asks the backend what the code is worth; when
+the deployment has no preview endpoint (404 on both spellings) the code is accepted as
+"pending" and sent with the order, where the server has the final say. A rejected code
+shows an inline message, an accepted one shows a Discount line and reduces the displayed
+total, and either way `coupon_code` rides along in the order body.
+Files: `src/lib/coupons.ts` (new — `CouponState`, `previewCoupon`, `normalizeCoupon`),
+`src/lib/api/endpoints.ts` (`ORDERS.applyCoupon` + `applyCouponAlt`), `src/routes/cart.tsx`.
