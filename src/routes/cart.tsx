@@ -749,6 +749,12 @@ function CartPage() {
                     <dd className="text-charcoal">Rs {fee}</dd>
                   </div>
                 )}
+                {discount > 0 && (
+                  <div className="flex justify-between">
+                    <dt className="text-charcoal/60">Discount</dt>
+                    <dd className="font-semibold text-charcoal">− Rs {discount}</dd>
+                  </div>
+                )}
                 <div className="flex justify-between border-t border-charcoal/10 pt-2">
                   <dt className="font-display font-extrabold uppercase text-charcoal">Total</dt>
                   <dd className="font-display text-xl font-extrabold text-flame">Rs {total}</dd>
