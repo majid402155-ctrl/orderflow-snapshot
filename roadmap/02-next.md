@@ -1,16 +1,15 @@
 # Next (re-planned against backend v2.4)
 
 ## Just finished
-**2.4 Branch picker on the cart** — branches are listed with hours, an Open/Closed badge and
-the delivery radius; the pick is remembered and sent as `branch_id`, and a closed branch
-blocks the order. (2.3 before it put the real multi-item order body in place.)
+**2.5 Discount code box** — a code field on the cart summary; the backend previews the
+discount when it can, otherwise the code rides along with the order. (2.3 put the real
+multi-item order body in place, 2.4 added the branch picker.)
 
 ## Building next, in this order
 
 | # | Slice | Why now |
 |---|-------|---------|
-| 2.5 | Coupon box (preview discount before placing) | body already accepts `coupon_code` |
-| 2.6 | Real bill shown in the summary + **out-of-stock (409) modal** | never trust a client total |
+| 2.6 | Real bill in the summary + **out-of-stock (409) modal** | never trust a client total; sold-out needs its own screen |
 
 ## Then
 
@@ -24,3 +23,7 @@ blocks the order. (2.3 before it put the real multi-item order body in place.)
 - **Phase 6 Owner tools** — inventory, branches, staff manager.
 - **Phase 7 SaaS layer** — `/onboard` wizard, plans, subscription, invoice proof.
 - **Phase 8 Design unification** · **Phase 9 Realtime rollout**.
+
+## Handover note
+`main_content.md` at the project root is the full guide for anyone joining (system,
+architecture, what is done, what is left, how to run it). Keep it updated with this file.
