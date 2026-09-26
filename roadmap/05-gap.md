@@ -9,7 +9,7 @@ Legend: **BUILT** · **PARTIAL** (exists, incomplete or on sample data) · **MIS
 |---|---|
 | `/` storefront | BUILT — but no sizes, no branch, no category tabs from `/menu/categories/` |
 | `/dish/$slug` | BUILT — real `sizes[]` picker with per-size prices (2.2) |
-| `/cart` | BUILT — multi-item body, order type, branch picker, discount code (2.2–2.5); still shows an estimated bill until 2.6 |
+| `/cart` | BUILT — multi-item body, order type, branch picker, discount code (2.2–2.5); server bill shown in a receipt popup, 409 sold-out popup (2.6) |
 | `/login`, `/signup`, `/forgot-password`, `/reset-password` | BUILT — phone code over WhatsApp (2.1/2.1b), 429 countdown on the button |
 | `/change-password` | BUILT (forced when `must_change_password`) |
 | `/profile` | BUILT — orders, addresses, security |

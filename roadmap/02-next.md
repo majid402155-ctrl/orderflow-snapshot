@@ -1,7 +1,7 @@
 # Next (re-planned against backend v2.4)
 
 ## Just finished
-**2.5 Discount code box** — a code field on the cart summary; the backend previews the
+**2.6 Real bill + sold-out popup** — receipt popup with the server bill; 409 opens its own popup.
 discount when it can, otherwise the code rides along with the order. (2.3 put the real
 multi-item order body in place, 2.4 added the branch picker.)
 
@@ -9,7 +9,7 @@ multi-item order body in place, 2.4 added the branch picker.)
 
 | # | Slice | Why now |
 |---|-------|---------|
-| 2.6 | Real bill in the summary + **out-of-stock (409) modal** | never trust a client total; sold-out needs its own screen |
+| 3.1 | Public `/track/$code` page, 5-step timeline on `ws/orders/{order_code}/` | tracking by order code, no login |
 
 ## Then
 

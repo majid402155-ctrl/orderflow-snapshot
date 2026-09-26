@@ -37,6 +37,9 @@ import {
   type Branch,
 } from "@/lib/branches";
 import { normalizeCoupon, previewCoupon, type CouponState } from "@/lib/coupons";
+import { ApiError } from "@/lib/api/client";
+import type { OrderBill } from "@/lib/account";
+import { OrderReceiptDialog, SoldOutDialog } from "@/components/kennedy/OrderOutcomeDialogs";
 import {
   formatPkPhoneInput,
   normalizePkPhone,
@@ -237,6 +240,13 @@ function CartPage() {
     );
   };
 
+  const [soldOut, setSoldOut] = useState<string[] | null>(null);
+  const [receipt, setReceipt] = useState<{
+    code: string | null;
+    bill: OrderBill | null;
+    note: string;
+  } | null>(null);
+
   const placeOrder = async () => {
     if (blockReason) {
       setTouched({ name: true, phone: true, street: true, city: true });
@@ -308,18 +318,20 @@ function CartPage() {
       }
 
       clearSelected();
-      const code = getLastOrderCode();
-      const bill = getLastOrderBill();
-      toast.success(code ? `Order ${code} confirmed` : "Order confirmed", {
-        description: bill
-          ? `Total Rs ${bill.total}${orderType === "delivery" ? " · live tracking has started" : " · we'll call when it's ready"}`
-          : orderType === "delivery"
-            ? "Live rider tracking has started on your profile."
-            : "We'll call you when it's ready to collect.",
-        duration: 6000,
+      setReceipt({
+        code: getLastOrderCode(),
+        bill: getLastOrderBill(),
+        note:
+          orderType === "delivery"
+            ? "This is the final bill from the kitchen. Live rider tracking has started."
+            : "This is the final bill from the kitchen. We'll call when it's ready.",
       });
-      void navigate({ to: "/profile" });
     } catch (err) {
+      if (err instanceof ApiError && err.status === 409) {
+        const names = Object.values(err.fields).flat().filter((s) => s && s !== "insufficient_stock");
+        setSoldOut(names);
+        return;
+      }
       toast.error("We couldn't place your order", {
         description: err instanceof Error ? err.message : "Please try again in a moment.",
       });
@@ -734,7 +746,10 @@ function CartPage() {
                 )}
               </div>
 
-              <dl className="mt-5 space-y-2 font-body text-sm">
+              <p className="mt-5 font-body text-[11px] uppercase tracking-[0.14em] text-charcoal/50">
+                Estimate · the kitchen confirms the final bill
+              </p>
+              <dl className="mt-2 space-y-2 font-body text-sm">
                 <div className="flex justify-between">
                   <dt className="text-charcoal/60">Subtotal</dt>
                   <dd className="text-charcoal">Rs {subtotal}</dd>
@@ -787,6 +802,17 @@ function CartPage() {
           </div>
         )}
       </div>
+      <SoldOutDialog open={soldOut !== null} items={soldOut ?? []} onClose={() => setSoldOut(null)} />
+      <OrderReceiptDialog
+        open={receipt !== null}
+        code={receipt?.code ?? null}
+        bill={receipt?.bill ?? null}
+        note={receipt?.note ?? ""}
+        onClose={() => {
+          setReceipt(null);
+          void navigate({ to: "/profile" });
+        }}
+      />
     </main>
   );
 }
