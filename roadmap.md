@@ -20,7 +20,7 @@ Multi-item `items: []` CONFIRMED by the v2.4 guide — no longer blocked.
 - [x] 2.3 Multi-item cart + real order body (order_type, branch_id, items[])
 - [x] 2.4 Branch picker (opening hours + delivery radius)
 - [x] 2.5 Coupon box
-- [ ] 2.6 Real bill from order response (delivery_fee + cod_fee) + out-of-stock (409) modal
+- [x] 2.6 Real bill from order response (delivery_fee + cod_fee) + out-of-stock (409) modal
 
 ## Phase 3 — Order Tracking (socket-first, refresh engine as fallback)
 - [ ] 3.1 New public /track/$code page, 5-step timeline on ws/orders/{order_code}/

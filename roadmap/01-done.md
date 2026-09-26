@@ -94,3 +94,7 @@ shows an inline message, an accepted one shows a Discount line and reduces the d
 total, and either way `coupon_code` rides along in the order body.
 Files: `src/lib/coupons.ts` (new — `CouponState`, `previewCoupon`, `normalizeCoupon`),
 `src/lib/api/endpoints.ts` (`ORDERS.applyCoupon` + `applyCouponAlt`), `src/routes/cart.tsx`.
+
+## 2.6 Real bill + sold-out popup
+- Cart summary is labelled as an estimate; after ordering, a receipt popup shows the server's own subtotal / delivery / COD / discount / total, then goes to tracking.
+- `409 insufficient_stock` opens a dedicated "Sold out just now" popup listing affected items (read defensively from the error fields). Files: `src/components/kennedy/OrderOutcomeDialogs.tsx`, `src/routes/cart.tsx`.
